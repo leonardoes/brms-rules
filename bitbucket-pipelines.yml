@@ -1,0 +1,47 @@
+image:
+  name: 352943475640.dkr.ecr.sa-east-1.amazonaws.com/uni-pipe-deploy-eks-java:jdk8-2.2.0
+  aws:
+    oidc-role: arn:aws:iam::352943475640:role/BitBucktetIntegrationService
+
+definitions:
+  steps:
+    # Step deploy common
+    - step: &deploy-default
+        services:
+          - docker
+        oidc: true
+        script:
+          - bash /pipe.sh
+    # Steps deploy
+    - step: &deploy-develop
+        <<: *deploy-default
+        name: Deploy to Develop
+        deployment: develop
+        runs-on:
+          - unimed.eks.dev
+          - self.hosted
+          - linux
+    - step: &deploy-staging
+        <<: *deploy-default
+        name: Deploy to Staging
+        deployment: staging
+        runs-on:
+          - unimed.eks.hml
+          - self.hosted
+          - linux
+    - step: &deploy-production
+        <<: *deploy-default
+        name: Deploy to Production
+        deployment: production
+        runs-on:
+          - unimed.eks.prd
+          - self.hosted
+          - linux
+pipelines:
+  branches:
+    main:
+      - step: *deploy-production
+    staging:
+      - step: *deploy-staging
+    develop:
+      - step: *deploy-develop

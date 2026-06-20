@@ -1,0 +1,69 @@
+#environment: hml
+
+## Application required reserved IG?
+### Add node label
+reservedInstanceGroup: "brms-drools"
+#iam.amazonaws.com/role: "arn:aws:iam::301676479058:role/SQS-AccessEKS"
+## Taint NoddeGroup
+tolerations:
+ - effect: "NoSchedule"
+   key: "unimed/reserved-for" 
+   operator: "Equal"
+   value: "brms-drools"
+
+## Container image confs
+image:
+   repository: "301676479058.dkr.ecr.us-east-1.amazonaws.com/brms-rules-globalvida-cotacao"
+  #  tag: latest
+
+albHealthCheckPath: /actuator/health
+
+## Application confs
+### Port
+appPort: 8080
+
+### Container size (request/limits)
+resources:
+   requests:
+     memory: 215Mi
+     cpu: 100m
+   limits:
+     memory: 1024Mi
+     cpu: 350m
+
+### min number pods
+minReplicas: 2
+
+### readinessprobe indicates whether the Container is ready to service requests.
+#readinessProbe:
+#  httpHeaders: []
+#  #- name: Authorization
+#  #  value: Basic XYZ
+#  path: /swagger-ui.html
+#  ### Number of seconds after the container has started before liveness probes are initiated
+#  initialDelaySeconds: 60
+#  ### Number of seconds after which the probe times out
+#  timeoutSeconds: 3
+#  ### How often (in seconds) to perform the probe
+#  periodSeconds: 10
+#  ### Minimum consecutive failures for the probe to be considered failed after having succeeded
+#  failureThreshold: 3
+#  ### Minimum consecutive successes for the probe to be considered successful after having failed
+#  successThreshold: 1
+
+### livenessprobe indicates whether the Container is running.
+#livenessProbe:
+#  httpHeaders: []
+#  #- name: Authorization
+#  #  value: Basic XYZ
+#  path: /health
+#  ### Number of seconds after the container has started before liveness probes are initiated
+#  initialDelaySeconds: 5
+#  ### Number of seconds after which the probe times out
+#  timeoutSeconds: 3
+#  ### How often (in seconds) to perform the probe
+#  periodSeconds: 10
+#  ### Minimum consecutive failures for the probe to be considered failed after having succeeded
+#  failureThreshold: 3
+#  ### Minimum consecutive successes for the probe to be considered successful after having failed
+#  successThreshold: 1

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <!-- JSON Layout -->
+        <Console name="ConsoleJson" target="SYSTEM_OUT">
+            <JsonLayout compact="true" eventEol="true" />
+        </Console>
+
+        <!-- Colorido e legível (apenas para testes locais) -->
+        <Console name="ConsolePretty" target="SYSTEM_OUT">
+            <PatternLayout pattern="%style{%d{yyyy-MM-dd HH:mm:ss}}{black} %highlight{%-5level} [%style{%t}{bright,blue}] %style{%C{1.}}{bright,yellow}: %msg%n%throwable"/>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <!-- Logs detalhados apenas para inicialização do Spring Boot -->
+        <Logger name="org.springframework.boot" level="INFO" additivity="false">
+            <AppenderRef ref="ConsoleJson"/>
+        </Logger>
+
+        <!-- Logs de erro para o restante da aplicação -->
+        <Root level="ERROR">
+            <AppenderRef ref="ConsoleJson"/>
+        </Root>
+    </Loggers>
+</Configuration>

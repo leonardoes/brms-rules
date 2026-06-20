@@ -1,0 +1,158 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+    # label de tags do Datadog à nível de deployment
+    tags.datadoghq.com/env: prd
+    tags.datadoghq.com/service: brms-rules-vida-coletiva-serit-cotacao
+    tags.datadoghq.com/version: "v3.0"
+spec:
+  replicas: {{ .Values.minReplicas }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        revision: {{ .Release.Revision|quote }}
+        # label de tags do Datadog à nível de deployment
+        tags.datadoghq.com/env: prd
+        tags.datadoghq.com/service: brms-rules-vida-coletiva-serit-cotacao
+        tags.datadoghq.com/version: "v3.0"
+      annotations:
+       # annotation para habilitar coleta de log do container sso
+       #########################################
+        ad.datadoghq.com/brms-rules-vida-coletiva-serit-cotacao-prod.logs: '[{"source":"java","service":"brms-rules-vida-coletiva-serit-cotacao"}]'
+{{- if .Values.arnIAMrole }}
+        iam.amazonaws.com/role: "{{ .Values.arnIAMrole }}"
+{{- end }}
+{{- if .Values.annotations }}
+{{ toYaml .Values.annotations | indent 8 }}
+{{- end }}
+    spec:
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: {{ .Release.Name }}
+              topologyKey: kubernetes.io/hostname
+{{- if .Values.initContainers }}
+      initContainers:
+{{ toYaml .Values.initContainers | indent 6 }}
+{{- end }}
+      containers:
+      - name: {{ .Release.Name }}
+        ports:
+        - name: application
+          containerPort: {{ .Values.appPort }}
+{{- if not .Values.image.repository }}
+        image: "510338013850.dkr.ecr.us-east-1.amazonaws.com/{{ .Release.Name }}:{{ .Values.image.tag }}"
+{{- else }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+{{- end }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+{{- if .Values.customCommandApp }}
+        command:
+{{ toYaml .Values.customCommandApp | indent 8 }}
+{{- end }}
+{{- if .Values.customArgsApp }}
+        args:
+{{ toYaml .Values.customArgsApp | indent 8 }}
+{{- end }}
+{{- if .Values.readinessProbe }}
+        readinessProbe:
+          httpGet:
+{{- if .Values.readinessProbe.httpHeaders }}
+            httpHeaders:
+{{ toYaml .Values.readinessProbe.httpHeaders | indent 14 }}
+{{- end }}
+            path: {{ .Values.readinessProbe.path }}
+            port: {{ .Values.appPort }}
+            scheme: HTTP
+          initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+          timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+          periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+          failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          successThreshold: {{ .Values.readinessProbe.successThreshold }}
+{{- end }}
+{{- if .Values.livenessProbe }}
+        livenessProbe:
+          httpGet:
+{{- if .Values.livenessProbe.httpHeaders }}
+            httpHeaders:
+{{ toYaml .Values.livenessProbe.httpHeaders | indent 14 }}
+{{- end }}
+            path: {{ .Values.livenessProbe.path }}
+            port: {{ .Values.appPort }}
+            scheme: HTTP
+          initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+          timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+          periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+          failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+          successThreshold: {{ .Values.livenessProbe.successThreshold }}
+{{- end }}
+{{- if .Values.resources }}
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+{{- end }}
+        env:
+          #########################################
+       # variáveis de ambiente para aplicar tags na aplicação,
+       # indicar IP do container do agent e habilitar logs de
+       # startup do tracer
+       #########################################
+          - name: DD_ENV
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tags.datadoghq.com/env']
+          - name: DD_SERVICE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tags.datadoghq.com/service']
+          - name: DD_VERSION
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['tags.datadoghq.com/version']
+          - name: DD_AGENT_HOST
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: DD_TRACE_STARTUP_LOGS
+            value: "true"
+          - name: DD_LOGS_INJECTION
+            value: "true"
+          - name: DD_ANALYTICS_ENABLED
+            value: "true"
+          - name: ENVIRONMENT
+            value: {{ .Values.environment | quote }}
+{{- if .Values.extraEnv }}
+{{ toYaml .Values.extraEnv | indent 10 }}
+{{- end }}
+        volumeMounts:
+{{- if .Values.volumeMounts }}
+{{ toYaml .Values.volumeMounts | indent 8 }}
+{{- end }}
+{{- if .Values.reservedInstanceGroup }}
+      nodeSelector:
+        unimed/reserved-for: {{ .Values.reservedInstanceGroup }}
+      tolerations:
+      - effect: NoSchedule
+        key: unimed/reserved-for
+        operator: Equal
+        value: {{ .Values.reservedInstanceGroup }}
+{{- end }}
+      volumes:
+{{- if .Values.volumes }}
+{{ toYaml .Values.volumes | indent 6 }}
+{{- end }}

@@ -1,0 +1,32 @@
+#environment: hml
+
+## Application required reserved IG?
+### Add node label
+reservedInstanceGroup: "ng-brms-drools"
+#iam.amazonaws.com/role: "arn:aws:iam::301676479058:role/SQS-AccessEKS"
+## Taint NoddeGroup
+tolerations:
+ - effect: "NoSchedule"
+   key: "unimed/reserved-for" 
+   operator: "Equal"
+   value: "ng-brms-drools"
+
+## Container image confs
+image:
+   repository: "301676479058.dkr.ecr.us-east-1.amazonaws.com/brms-rules-multivida-cotacao"
+  #  tag: latest
+
+albHealthCheckPath: /actuator/health
+
+## Application confs
+### Port
+appPort: 8080
+
+### Container size (request/limits)
+resources:
+   requests:
+     memory: 1024Mi
+     cpu: 250m
+   limits:
+     memory: 2048Mi
+     cpu: 500m

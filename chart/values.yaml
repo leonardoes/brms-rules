@@ -1,0 +1,127 @@
+#environment: local
+
+## Application required reserved IG?
+### Add node label
+reservedInstanceGroup: ""
+
+## Application confs
+### Port
+appPort: 80
+# Allow Values 30000 - 32767
+customNodePort: {}
+
+### Custom Command App Start
+customCommandApp: []
+#  - "sh"
+#  - "-c"
+
+### Custom Args App Start
+customArgsApp: []
+#  - "ls -lah"
+
+### time in seconds that the cluster waits to give a teminate in the pod
+terminationGracePeriodSeconds: 30
+
+### min number pods
+minReplicas: 2
+
+### Container size (request/limits)
+resources: {}
+#  limits:
+#    cpu: 30m
+#    memory: 40Mi
+#  requests:
+#    cpu: 15m
+#    memory: 20Mi
+
+
+## AWS IAM Role
+### Application needs integration with AWS services (via API calls) 
+arnIAMrole: ""
+
+
+## Container image confs
+image:
+  repository: ""
+  tag: web
+  pullPolicy: Always
+
+
+## Enviroment variables
+extraEnv: []
+#  - name: NEWRELIC_APPNAME
+#    value: app-example
+#  - name: NEWRELIC_LICENSE_KEY
+#    valueFrom:
+#      secretKeyRef:
+#        name: app-example-overlay
+#        key: newrelic_license_key
+
+
+## Health Check
+### ALB TargetGroup
+albHealthCheckPath: /
+
+### readinessprobe indicates whether the Container is ready to service requests.
+readinessProbe: {}
+#  httpHeaders: []
+#  #- name: Authorization
+#  #  value: Basic XYZ
+#  path: /health
+#  ### Number of seconds after the container has started before liveness probes are initiated
+#  initialDelaySeconds: 5
+#  ### Number of seconds after which the probe times out
+#  timeoutSeconds: 3
+#  ### How often (in seconds) to perform the probe
+#  periodSeconds: 10
+#  ### Minimum consecutive failures for the probe to be considered failed after having succeeded
+#  failureThreshold: 3
+#  ### Minimum consecutive successes for the probe to be considered successful after having failed
+#  successThreshold: 1
+
+### livenessprobe indicates whether the Container is running.
+livenessProbe: {}
+#  httpHeaders: []
+#  #- name: Authorization
+#  #  value: Basic XYZ
+#  path: /health
+#  ### Number of seconds after the container has started before liveness probes are initiated
+#  initialDelaySeconds: 5
+#  ### Number of seconds after which the probe times out
+#  timeoutSeconds: 3
+#  ### How often (in seconds) to perform the probe
+#  periodSeconds: 10
+#  ### Minimum consecutive failures for the probe to be considered failed after having succeeded
+#  failureThreshold: 3
+#  ### Minimum consecutive successes for the probe to be considered successful after having failed
+#  successThreshold: 1
+
+
+## HPA (Horizontal Pod Autoscaler)
+hpa: {}
+  ### max number pods
+  #maxReplicas: 10
+  ### Scaling metric type
+  ### values = cpu or memory
+  #scalingBy: cpu
+  ### Threshold in percent
+  #targetAverageUtilization: 80
+
+
+## Annotations
+annotations: []
+
+## InitContainers
+initContainers: []
+
+## Volumes
+volumes: []
+  # - name: sensitive-config
+  #   secret:
+  #     secretName: app-name
+
+## Volume mounts
+volumeMounts: []
+  # - name: sensitive-config
+  #   mountPath: "/sensitive-config"
+  #   readOnly: true
